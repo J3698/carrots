@@ -53,9 +53,10 @@ def remove_spots(dst):
         dst = cv2.morphologyEx(dst, cv2.MORPH_CLOSE, kernel)
     return dst
 
-def find_digits(frame):
+def read_digits(frame):
 
-    roi = binarize_screen(frame)
+    roi = get_digits_roi(frame)
+    roi = clarify_digits(roi)
     roi = remove_islands(roi)
 
     #return 0, cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
@@ -82,11 +83,10 @@ def get_digits_bounds(frame):
     br = (x_avg + 144 + 10, y_avg + 48)
     return tl, br
 
-def binarize_screen(frame):
+def get_digits_roi(frame):
     p0, p1 = get_digits_bounds(frame)
-    roi = frame[p0[1]:p1[1], p0[0]:p1[0]]
-    roi = clarify_digits(roi)
-    return roi
+    return frame[p0[1]:p1[1], p0[0]:p1[0]]
+
 
 def clarify_digits(screen):
     screen = cv2.cvtColor(screen, cv2.COLOR_BGR2HSV)[..., 2]
@@ -192,7 +192,7 @@ def main():
 def process_and_save_images():
     train_x, train_y, test_x, test_y = get_datasets()
     for i in range(len(train_x)):
-        _, screen = find_digits(cv2.imread(train_x[i]))
+        _, screen = read_digits(cv2.imread(train_x[i]))
         #print(train_x[i])
         cv2.imwrite(str(i)+".png", screen)
 
@@ -223,7 +223,7 @@ def split_data(data):
 def calc_accuracy(filenames, labels):
     correct = 0
     for filename, truth in zip(filenames, labels):
-        number, _ = find_digits(cv2.imread(filename))
+        number, _ = read_digits(cv2.imread(filename))
         if number == int(truth):
             correct += 1
         else:
@@ -234,7 +234,7 @@ def calc_accuracy(filenames, labels):
 def process_image(filename):
     cv2.namedWindow('comp')
     frame = cv2.imread(filename)
-    _, screen = find_digits(frame)
+    _, screen = read_digits(frame)
     comparison = np.hstack((screen, frame))
     show_indefinitely(comparison)
 
@@ -253,7 +253,7 @@ def process_video():
     while True:
         for i in range(2):
             _, frame = cap.read()
-        _, screen = find_digits(frame)
+        _, screen = read_digits(frame)
         comparison = np.hstack((screen, frame))
         cv2.imshow('comp', comparison)
         cv2.waitKey(1)
