@@ -56,6 +56,7 @@ def remove_spots(dst):
 def find_digits(frame):
 
     roi = binarize_screen(frame)
+    roi = remove_islands(roi)
 
     #return 0, cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
     last = find_solid_edge(roi)
@@ -85,37 +86,46 @@ def binarize_screen(frame):
     p0, p1 = get_digits_bounds(frame)
     roi = frame[p0[1]:p1[1], p0[0]:p1[0]]
     roi = clarify_digits(roi)
-    roi = remove_islands(roi)
     return roi
 
 def clarify_digits(screen):
+    screen = cv2.cvtColor(screen, cv2.COLOR_BGR2HSV)[..., 2]
 
-    roi = cv2.cvtColor(screen, cv2.COLOR_BGR2HSV)[..., 2]
+    screen = remove_glare(screen)
+    screen = increase_contrast(screen)
+    screen = remove_gradient(screen)
+    screen = remove_specks_from_screen(screen)
+    screen = threshold_screen(screen)
 
-    scores = stats.zscore(roi, axis = None)
-    mask = np.zeros(roi.shape, dtype = np.uint8)
+    return screen
+
+def remove_glare(img):
+    scores = stats.zscore(img, axis = None)
+    mask = np.zeros(img.shape, dtype = np.uint8)
     mask[scores > 2.5] = 255
     kernel = np.ones((3, 3), np.uint8)
     mask = cv2.dilate(mask, kernel)
-    roi = cv2.inpaint(roi, mask, 1, cv2.INPAINT_NS)
+    img = cv2.inpaint(img, mask, 1, cv2.INPAINT_NS)
+    return img
 
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    roi = cv2.equalizeHist(roi)
-    roi = clahe.apply(roi)
-    roi -= cv2.GaussianBlur(roi, (451, 3), 0)
-    roi = cv2.medianBlur(roi, 5)
+def increase_contrast(img):
+    return cv2.equalizeHist(img)
 
-    for i in range(3, 9, 2):
+def remove_gradient(img):
+    return img - cv2.GaussianBlur(img, (451, 3), 0)
+
+def remove_specks_from_screen(img):
+    for i in range(3, 7, 2):
         kernel = np.ones((i, i),np.uint8)
-        roi = cv2.morphologyEx(roi, cv2.MORPH_OPEN, kernel)
-        roi = cv2.morphologyEx(roi, cv2.MORPH_CLOSE, kernel)
-    _, roi = cv2.threshold(roi,127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    kernel = np.ones((5, 5),np.uint8)
-    roi = cv2.morphologyEx(roi, cv2.MORPH_OPEN, kernel)
+        img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+        img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+    return img
 
-    return roi
+def threshold_screen(img):
+    return cv2.threshold(img, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
 
 def remove_islands(roi):
+    return roi
     num_components, labels = cv2.connectedComponents(roi)
     occurrences = np.bincount(labels.flatten())
     roi[occurrences[labels] < 80] = 0
@@ -141,14 +151,14 @@ def draw_label(d1, d0, screen):
 
 def detect_white_rect(roi, x, y, is_vertical = True):
     px, py = int(x * roi.shape[1]), int(y * roi.shape[0])
-    radH = 10
-    radW = 6
+    height = 10
+    width = 6
     if not is_vertical:
-        radH, radW = radW, radH
+        height, width = width, height
 
-    amount_filled = np.average(roi[py - radH: py + radH, px - radW: px + radW])
-    rect_tl = (px - radW, py - radH)
-    rect_br = (px + radW, py + radH)
+    amount_filled = np.average(roi[py - height: py + height, px - width: px + width])
+    rect_tl = (px - width, py - height)
+    rect_br = (px + width, py + height)
     cv2.rectangle(roi, rect_tl, rect_br, 128, thickness = 2)
     if amount_filled > 60:
         return True
