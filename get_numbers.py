@@ -8,6 +8,7 @@ import time
 import csv
 import glob
 import random
+import cProfile
 
 target = cv2.imread('screen.png')
 target_hsv = cv2.cvtColor(target, cv2.COLOR_BGR2HSV)
@@ -16,63 +17,21 @@ target_hist = cv2.calcHist([target_hsv],
             [0, 180, 0, 256])
 cv2.normalize(target_hist, target_hist, 0, 255, cv2.NORM_MINMAX)
 
-def get_screen_area(frame):
-    dst = backproject_screen(frame)
-    dst = smooth_backprojection(dst)
-    _, dst = cv2.threshold(dst, 127, 255, cv2.THRESH_BINARY)
-    dst = fill_screen_holes(dst)
-    dst2 = remove_spots(dst)
-    #return np.hstack((dst, dst2))
-    return dst2
-
-def backproject_screen(frame):
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    return cv2.calcBackProject(\
-                [hsv], [0, 1], target_hist,\
-                [0, 180, 0, 256], 1)
-
-def fill_screen_holes(dst):
-    h, w = dst.shape[:2]
-    mask = np.zeros((h+2, w+2), np.uint8)
-    cv2.floodFill(dst, mask, (0, 0), 127)
-    dst = np.where(dst == 0, 255, dst)
-    dst = np.where(dst == 127, 0, dst)
-    return dst
-
-def smooth_backprojection(projection):
-    disc = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    projection = cv2.filter2D(projection, -1, disc)
-    for i in range(2):
-        projection = cv2.filter2D(projection, -1, disc)
-    return projection
-
-def remove_spots(dst):
-    for i in range(5, 90, 10):
-        kernel = np.ones((i, i),np.uint8)
-        dst = cv2.morphologyEx(dst, cv2.MORPH_OPEN, kernel)
-        dst = cv2.morphologyEx(dst, cv2.MORPH_CLOSE, kernel)
-    return dst
 
 def read_digits(frame):
-
     roi = get_digits_roi(frame)
     roi = clarify_digits(roi)
-    roi = remove_islands(roi)
+    roi = threshold_screen(roi)
 
-    #return 0, cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-    last = find_solid_edge(roi)
-    digits_end = last[1]
-    digits_ratio = digits_end / roi.shape[1]
-    second_digit_start_x = digits_ratio - .2557
-
+    second_digit_start_x = calc_digits_location(roi)
     d0 = get_digit(roi, second_digit_start_x, .08)
     d1 = get_digit(roi, second_digit_start_x - .3836, .08)
-    #draw_label(d1, d0, gray)
-    #cv2.circle(gray, (last[1], last[0]), 10, 127)
-    #cv2.rectangle(gray, (p0[0], p0[1]), (p1[0], p1[1]), 128, thickness = 2)
 
-    #return d1 * 10 + d0, cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
-    return d1 * 10 + d0, None#cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+    return d1 * 10 + d0, roi
+
+def get_digits_roi(frame):
+    p0, p1 = get_digits_bounds(frame)
+    return frame[p0[1]:p1[1], p0[0]:p1[0]]
 
 def get_digits_bounds(frame):
     screen_area = get_screen_area(frame)
@@ -83,9 +42,51 @@ def get_digits_bounds(frame):
     br = (x_avg + 144 + 10, y_avg + 48)
     return tl, br
 
-def get_digits_roi(frame):
-    p0, p1 = get_digits_bounds(frame)
-    return frame[p0[1]:p1[1], p0[0]:p1[0]]
+def get_screen_area(frame):
+    dst = backproject_screen(frame)
+    dst = smooth_backprojection(dst)
+    _, dst = cv2.threshold(dst, 127, 255, cv2.THRESH_BINARY)
+    dst = fill_screen_holes(dst)
+    dst2 = remove_spots(dst)
+    return dst2
+
+def backproject_screen(frame):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    return cv2.calcBackProject(\
+                [hsv], [0, 1], target_hist,\
+                [0, 180, 0, 256], 1)
+
+def smooth_backprojection(projection):
+    disc = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    projection = cv2.filter2D(projection, -1, disc)
+    for i in range(2):
+        projection = cv2.filter2D(projection, -1, disc)
+    print(projection.dtype)
+    return projection
+
+def fill_screen_holes(dst):
+    h, w = dst.shape[:2]
+    mask = np.zeros((h+2, w+2), np.uint8)
+    cv2.floodFill(dst, mask, (0, 0), 127)
+    dst = np.where(dst == 0, 255, dst)
+    dst = np.where(dst == 127, 0, dst)
+    return dst
+
+def remove_spots(dst):
+    for i in range(5, 90, 10):
+        kernel = np.ones((i, i),np.uint8)
+        dst = cv2.morphologyEx(dst, cv2.MORPH_OPEN, kernel)
+        dst = cv2.morphologyEx(dst, cv2.MORPH_CLOSE, kernel)
+    return dst
+
+def calc_digits_location(screen):
+    last = find_solid_edge(screen)
+    digits_end = last[1]
+    digits_ratio = digits_end / screen.shape[1]
+    second_digit_start_x = digits_ratio - .2557
+    return second_digit_start_x
+
+
 
 
 def clarify_digits(screen):
@@ -95,7 +96,6 @@ def clarify_digits(screen):
     screen = increase_contrast(screen)
     screen = remove_gradient(screen)
     screen = remove_specks_from_screen(screen)
-    screen = threshold_screen(screen)
 
     return screen
 
@@ -123,13 +123,6 @@ def remove_specks_from_screen(img):
 
 def threshold_screen(img):
     return cv2.threshold(img, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-
-def remove_islands(roi):
-    return roi
-    num_components, labels = cv2.connectedComponents(roi)
-    occurrences = np.bincount(labels.flatten())
-    roi[occurrences[labels] < 80] = 0
-    return roi
 
 def find_solid_edge(gray):
     horizontal_pixel_counts = np.sum(gray, axis = 0) // 255
@@ -184,16 +177,26 @@ def segments_to_digit(A, B, C, D, E, F, G):
     return defaultdict(lambda: 0, nums)[num]
 
 def main():
-    #process_image("trained_with/1578022928.093898.png")
+
+    img = cv2.imread("trained_with/1578022854.3675454.png")
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    dst = backproject_screen(img)
+    dst2 = smooth_backprojection(dst)
+    _, dst2 = cv2.threshold(dst2, 127, 255, cv2.THRESH_BINARY)
+    dst3 = fill_screen_holes(dst2.copy())
+    dst4 = remove_spots(dst3)
+    comparison = np.hstack((dst3, dst4))
+    comparison[..., comparison.shape[1] // 2] = 255
+    show_indefinitely(comparison)
     #process_video()
-    print(get_accuracy())
+    #cProfile.run("get_accuracy()")
+    #print(get_accuracy())
     #process_and_save_images()
 
 def process_and_save_images():
     train_x, train_y, test_x, test_y = get_datasets()
     for i in range(len(train_x)):
         _, screen = read_digits(cv2.imread(train_x[i]))
-        #print(train_x[i])
         cv2.imwrite(str(i)+".png", screen)
 
 def get_accuracy():
@@ -223,26 +226,32 @@ def split_data(data):
 def calc_accuracy(filenames, labels):
     correct = 0
     for filename, truth in zip(filenames, labels):
-        number, _ = read_digits(cv2.imread(filename))
+        number = read_digits(cv2.imread(filename))[0]
         if number == int(truth):
             correct += 1
         else:
             print(filename)
     return correct / len(filenames)
 
-
 def process_image(filename):
     cv2.namedWindow('comp')
     frame = cv2.imread(filename)
     _, screen = read_digits(frame)
+    screen = pad_gray_image_to_match_bgr(screen, frame)
+    print(screen.shape)
     comparison = np.hstack((screen, frame))
     show_indefinitely(comparison)
+
+def pad_gray_image_to_match_bgr(roi, to_match):
+    y_pad = to_match.shape[0] - roi.shape[0]
+    x_pad = to_match.shape[1] - roi.shape[1]
+    padded = np.pad(roi, ((0, y_pad), (0, x_pad)))
+    return cv2.cvtColor(padded, cv2.COLOR_GRAY2BGR)
 
 def show_indefinitely(image):
     cv2.imshow('', image)
     while True:
         cv2.waitKey(1)
-
 
 def process_video():
     cv2.namedWindow('comp')
@@ -254,7 +263,8 @@ def process_video():
         for i in range(2):
             _, frame = cap.read()
         _, screen = read_digits(frame)
-        comparison = np.hstack((screen, frame))
+        padded = pad_gray_image_to_match_bgr(screen, frame)
+        comparison = np.hstack((padded, frame))
         cv2.imshow('comp', comparison)
         cv2.waitKey(1)
 

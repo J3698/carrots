@@ -6,11 +6,11 @@ import cv2
 
 def calc_flow(last, frame):
     if frame.shape[0] * frame.shape[1] <= 480 * 270:
-        return calc_flow_sequential(last, frame)
+        return calc_flow_normal(last, frame)
     else:
         return calc_flow_parallel(last, frame)
 
-def calc_flow_sequential(last, frame):
+def calc_flow_normal(last, frame):
     return cv2.calcOpticalFlowFarneback(\
             last, frame, None, 0.5, 5, 15, 3, 7, 1.5, 0)
 

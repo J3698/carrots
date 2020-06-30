@@ -1,0 +1,137 @@
+         39115 function calls (38878 primitive calls) in 19.125 seconds
+
+   Ordered by: standard name
+
+ tottime  filename:lineno(function)
+   0.000  <__array_function__ internals>:2(amax)
+   0.000  <__array_function__ internals>:2(argmax)
+   0.000  <__array_function__ internals>:2(argwhere)
+   0.001  <__array_function__ internals>:2(average)
+   0.002  <__array_function__ internals>:2(copyto)
+   0.000  <__array_function__ internals>:2(flip)
+   0.000  <__array_function__ internals>:2(ndim)
+   0.000  <__array_function__ internals>:2(nonzero)
+   0.000  <__array_function__ internals>:2(sum)
+   0.000  <__array_function__ internals>:2(transpose)
+   0.000  <__array_function__ internals>:2(where)
+   0.000  <string>:1(<module>)
+   0.000  _asarray.py:16(asarray)
+   0.001  _asarray.py:88(asanyarray)
+   0.000  _bootlocale.py:23(getpreferredencoding)
+   0.010  _methods.py:134(_mean)
+   0.006  _methods.py:167(_var)
+   0.001  _methods.py:215(_std)
+   0.004  _methods.py:50(_count_reduce_items)
+   0.001  _ufunc_config.py:139(geterr)
+   0.001  _ufunc_config.py:39(seterr)
+   0.000  _ufunc_config.py:437(__init__)
+   0.000  _ufunc_config.py:441(__enter__)
+   0.000  _ufunc_config.py:446(__exit__)
+   0.000  codecs.py:259(__init__)
+   0.000  codecs.py:308(__init__)
+   0.000  codecs.py:318(decode)
+   0.000  fromnumeric.py:1108(_argmax_dispatcher)
+   0.000  fromnumeric.py:1112(argmax)
+   0.000  fromnumeric.py:1800(_nonzero_dispatcher)
+   0.000  fromnumeric.py:1804(nonzero)
+   0.000  fromnumeric.py:2087(_sum_dispatcher)
+   0.001  fromnumeric.py:2092(sum)
+   0.000  fromnumeric.py:2546(_amax_dispatcher)
+   0.000  fromnumeric.py:2551(amax)
+   0.000  fromnumeric.py:3033(_ndim_dispatcher)
+   0.000  fromnumeric.py:3037(ndim)
+   0.001  fromnumeric.py:42(_wrapit)
+   0.001  fromnumeric.py:55(_wrapfunc)
+   0.000  fromnumeric.py:600(_transpose_dispatcher)
+   0.000  fromnumeric.py:604(transpose)
+   0.001  fromnumeric.py:73(_wrapreduction)
+   0.000  fromnumeric.py:74(<dictcomp>)
+   0.000  function_base.py:159(_flip_dispatcher)
+   0.001  function_base.py:163(flip)
+   0.000  function_base.py:289(_average_dispatcher)
+   0.003  function_base.py:293(average)
+   0.002  get_numbers.py:100(remove_glare)
+   0.000  get_numbers.py:109(increase_contrast)
+   0.001  get_numbers.py:112(remove_gradient)
+   0.002  get_numbers.py:115(remove_specks_from_screen)
+   0.000  get_numbers.py:122(threshold_screen)
+   0.000  get_numbers.py:125(remove_islands)
+   0.004  get_numbers.py:132(find_solid_edge)
+   0.009  get_numbers.py:150(detect_white_rect)
+   0.002  get_numbers.py:165(get_digit)
+   0.001  get_numbers.py:175(segments_to_digit)
+   0.000  get_numbers.py:182(<lambda>)
+   0.000  get_numbers.py:197(get_accuracy)
+   0.001  get_numbers.py:20(get_screen_area)
+   0.000  get_numbers.py:201(get_datasets)
+   0.000  get_numbers.py:205(get_data)
+   0.000  get_numbers.py:214(split_data)
+   0.001  get_numbers.py:221(calc_accuracy)
+   0.001  get_numbers.py:29(backproject_screen)
+   0.033  get_numbers.py:35(fill_screen_holes)
+   0.001  get_numbers.py:43(smooth_backprojection)
+   0.004  get_numbers.py:50(remove_spots)
+   0.001  get_numbers.py:57(read_digits)
+   0.001  get_numbers.py:68(calc_digits_location)
+   0.001  get_numbers.py:75(get_digits_bounds)
+   0.001  get_numbers.py:84(get_digits_roi)
+   0.001  get_numbers.py:89(clarify_digits)
+   0.000  index_tricks.py:731(__getitem__)
+   0.000  multiarray.py:1043(copyto)
+   0.000  multiarray.py:312(where)
+   0.003  numeric.py:159(ones)
+   0.000  numeric.py:533(_argwhere_dispatcher)
+   0.001  numeric.py:537(argwhere)
+   0.000  random.py:223(_randbelow)
+   0.000  random.py:263(shuffle)
+   0.000  random.py:96(seed)
+   0.004  stats.py:2349(zscore)
+   0.002  stats.py:248(_contains_nan)
+   0.995  {GaussianBlur}
+   0.000  {built-in method _codecs.utf_8_decode}
+   0.000  {built-in method _locale.nl_langinfo}
+   0.000  {built-in method builtins.exec}
+   0.000  {built-in method builtins.getattr}
+   0.001  {built-in method builtins.hasattr}
+   0.001  {built-in method builtins.isinstance}
+   0.000  {built-in method builtins.issubclass}
+   0.000  {built-in method builtins.len}
+   0.000  {built-in method builtins.max}
+   0.000  {built-in method builtins.print}
+   0.000  {built-in method io.open}
+   0.003  {built-in method numpy.array}
+   0.326  {built-in method numpy.core._multiarray_umath.implement_array_function}
+   0.003  {built-in method numpy.empty}
+   0.000  {built-in method numpy.geterrobj}
+   0.000  {built-in method numpy.seterrobj}
+   0.012  {built-in method numpy.zeros}
+   0.495  {calcBackProject}
+   0.156  {cvtColor}
+   0.002  {dilate}
+   0.002  {equalizeHist}
+   1.617  {filter2D}
+   0.325  {floodFill}
+   0.000  {function Random.seed at 0x7fe7c8cc6950}
+   0.001  {getStructuringElement}
+   2.882  {imread}
+   0.011  {inpaint}
+   0.000  {method 'append' of 'list' objects}
+   0.000  {method 'argmax' of 'numpy.ndarray' objects}
+   0.000  {method 'bit_length' of 'int' objects}
+   0.000  {method 'disable' of '_lsprof.Profiler' objects}
+   0.000  {method 'getrandbits' of '_random.Random' objects}
+   0.000  {method 'items' of 'dict' objects}
+   0.001  {method 'mean' of 'numpy.ndarray' objects}
+   0.009  {method 'nonzero' of 'numpy.ndarray' objects}
+   0.000  {method 'pop' of 'dict' objects}
+   0.026  {method 'reduce' of 'numpy.ufunc' objects}
+   0.000  {method 'replace' of 'str' objects}
+   0.000  {method 'split' of 'str' objects}
+   0.000  {method 'std' of 'numpy.ndarray' objects}
+   0.000  {method 'transpose' of 'numpy.ndarray' objects}
+   0.104  {moments}
+  12.012  {morphologyEx}
+   0.009  {rectangle}
+   0.016  {threshold}
+
+
